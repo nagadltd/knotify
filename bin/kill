@@ -1,0 +1,21 @@
+#!/bin/bash
+SERVER_NAME=knotify-1.0.jar
+
+RED='\033[0;31m'
+NC='\033[0m'
+GREEN='\033[0;32m'
+
+printf ${RED}"\nShutting down server forcefully by killing process\n".
+
+## Shutdown Command ############################################################
+CNT=`ps -ef | grep $USER | grep $SERVER_NAME | grep spring | grep -v grep | wc -l`
+PID=`ps -ef | grep $USER | grep $SERVER_NAME | grep spring | awk '{print $2}'`
+if [ $CNT -ne 0 ]
+then
+kill -9 $PID
+fi
+
+printf "================================================================================\n"
+printf "Shutdown $USER: $PID\n"
+printf "================================================================================\n"
+printf ${NC}"" 

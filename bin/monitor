@@ -1,0 +1,3 @@
+#!/bin/bash
+INSTANCE_NAME=INST_1
+tail -F /home/$USER/log/${USER}-ngd-dc-core-01-${INSTANCE_NAME}.log

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "trying to stop server gracefully."
+## Shutdown URL ################################################################
+curl -X POST -H "Content-Type: application/json" http://localhost:15524/shutdown
+echo "Check pstat and wait until process ends gracefully."

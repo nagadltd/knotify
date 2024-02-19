@@ -1,0 +1,60 @@
+#!/bin/bash
+LANG=C
+#used for identify multiple instance
+INSTANCE_NAME=INST_1
+# Change properties
+APPLICATION_NAME=knotify-1.0.jar
+
+RED='\033[0;31m'
+NC='\033[0m'
+GREEN='\033[0;32m'
+
+CNT=`ps -ef | grep $USER | grep $APPLICATION_NAME | grep spring | grep -v grep | wc -l`
+PID=`ps -ef | grep $USER | grep $APPLICATION_NAME | grep spring | awk '{print $2}'`
+if [ $CNT -ne 0 ]
+then
+        printf ${RED}""
+        printf "Server Already Running '$PID'\n"
+        printf "Please shutdown the server.\n"
+        printf "You can do it by using 'kill -9 $PID'\n"
+        printf ${NC}
+        exit 1
+fi
+
+SERVER_NAME=$USER
+BASE_PATH=/home/$USER
+CONFIG_PATH=$BASE_PATH/cfg
+GCDIR=$BASE_PATH/gclogs
+GCLOG=$GCDIR/$SERVER_NAME-gc.log
+SERVER_LOG_DIR=$BASE_PATH/log
+
+JAVA_HOME=/opt/jdk1.8.0_161  #  /opt/jdk1.7.0_80  for java 7 or /opt/jdk1.8.0_161 for java 8
+
+JAVA_OPTS="-D$SERVER_NAME"
+JAVA_OPTS="$JAVA_OPTS -server"
+JAVA_OPTS="$JAVA_OPTS -Xms256m -Xmx2048m -XX:NewRatio=2"
+JAVA_OPTS="$JAVA_OPTS -XX:SurvivorRatio=8"
+JAVA_OPTS="$JAVA_OPTS -XX:PermSize=256m -XX:MaxPermSize=256m"
+JAVA_OPTS="$JAVA_OPTS -XX:ParallelGCThreads=2 -XX:-UseConcMarkSweepGC"
+JAVA_OPTS="$JAVA_OPTS -XX:-UseParallelGC"
+JAVA_OPTS="$JAVA_OPTS -verbose:gc -Xloggc:$GCLOG"
+JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails"
+JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDateStamps"
+JAVA_OPTS="$JAVA_OPTS -XX:+PrintHeapAtGC"
+JAVA_OPTS="$JAVA_OPTS -XX:+HeapDumpOnOutOfMemoryError"
+JAVA_OPTS="$JAVA_OPTS -XX:HeapDumpPath=$GCDIR/$SERVER_NAME-java_pid.hprof"
+JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF8"
+JAVA_OPTS="$JAVA_OPTS -Dlogging.config=$CONFIG_PATH/logback.xml"
+
+export JAVA_HOME JAVA_OPTS INSTANCE_NAME
+
+DATE=`date +%Y%m%d%H%M`
+mv $GCLOG $GCDIR/backup/$SERVER_NAME.$DATE
+
+nohup $JAVA_HOME/bin/java $JAVA_OPTS -jar  $BASE_PATH/was/$APPLICATION_NAME --spring.config.location=$CONFIG_PATH/application.properties > /dev/null 2>&1 &
+
+printf  ${GREEN}""
+printf "Server Started Successfully.\n"
+printf "Monitor log using - /home/$USER/bin/monitor\n"
+printf "Monitor process state using - pstat\n"
+printf  ${NC}""
